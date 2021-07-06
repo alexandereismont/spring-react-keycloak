@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+
+  mysql:
+    image: mysql:5.7.32
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=keycloak
+      - MYSQL_USER=keycloak
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=root_password
+    healthcheck:
+      test: "mysqladmin ping -u root -p$${MYSQL_ROOT_PASSWORD}"
+      start_period: 10s
+
+  keycloak:
+    image: jboss/keycloak:12.0.2
+    container_name: keycloak
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - DB_VENDOR=mysql
+      - DB_ADDR=mysql
+      - DB_USER=keycloak
+      - DB_PASSWORD=password
+      - JDBC_PARAMS=useSSL=false
+    ports:
+      - "8180:8080"
+    depends_on:
+      - mysql
+    healthcheck:
+      test: "curl -f http://localhost:8180/auth || exit 1"
+      start_period: 20s
